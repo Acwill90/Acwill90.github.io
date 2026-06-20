@@ -54,9 +54,9 @@
 
     /* ── HERO ── */
     #hero {
-      min-height: 100vh;
+      min-height: 100svh;
       display: flex; flex-direction: column; justify-content: center;
-      padding: 120px 5vw 80px;
+      padding: 90px 5vw 40px;
       position: relative; overflow: hidden;
     }
     #hero::before {
@@ -70,78 +70,87 @@
       font-family: 'Inter', sans-serif;
       font-size: 0.78rem; font-weight: 600; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--teal);
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
     }
     .hero-name {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(3.5rem, 9vw, 7rem);
+      font-size: clamp(2.6rem, 8vw, 6.5rem);
       font-weight: 800; line-height: 0.95;
       letter-spacing: -0.01em;
       color: var(--white);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
     .hero-title {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-size: clamp(1.4rem, 3.4vw, 2.6rem);
       font-weight: 600; color: var(--teal);
-      letter-spacing: 0.02em; margin-bottom: 1.8rem;
+      letter-spacing: 0.02em; margin-bottom: 1.2rem;
+    }
+    .hero-pitch {
+      max-width: 600px;
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+      color: var(--white); line-height: 1.6;
+      margin-bottom: 1.3rem; font-weight: 500;
     }
     .hero-sub {
       max-width: 560px;
-      font-size: 1.05rem; color: var(--muted); line-height: 1.7;
-      margin-bottom: 2.5rem;
+      font-size: 0.92rem; color: var(--muted); line-height: 1.6;
+      margin-bottom: 1.6rem;
     }
     .hero-badges {
-      display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.8rem;
+      display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.8rem;
     }
     .badge {
-      display: inline-block; padding: 0.35rem 0.85rem;
+      display: inline-block; padding: 0.3rem 0.75rem;
       border: 1px solid var(--teal); border-radius: 2px;
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
       text-transform: uppercase; color: var(--teal);
     }
-    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .hero-cta { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 2.2rem; }
     .btn-primary {
-      padding: 0.85rem 2rem; background: var(--teal); color: #0F0F1A;
-      font-weight: 700; font-size: 0.9rem; letter-spacing: 0.08em;
+      padding: 0.8rem 1.8rem; background: var(--teal); color: #0F0F1A;
+      font-weight: 700; font-size: 0.85rem; letter-spacing: 0.07em;
       text-transform: uppercase; text-decoration: none;
       border-radius: 2px; transition: background 0.2s, transform 0.15s;
+      display: inline-flex; align-items: center; gap: 0.5rem;
     }
     .btn-primary:hover { background: var(--teal-dim); transform: translateY(-1px); }
     .btn-secondary {
-      padding: 0.85rem 2rem; background: transparent;
+      padding: 0.8rem 1.8rem; background: transparent;
       border: 1px solid var(--border); color: var(--white);
-      font-weight: 600; font-size: 0.9rem; letter-spacing: 0.08em;
+      font-weight: 600; font-size: 0.85rem; letter-spacing: 0.07em;
       text-transform: uppercase; text-decoration: none;
       border-radius: 2px; transition: border-color 0.2s, transform 0.15s;
     }
     .btn-secondary:hover { border-color: var(--teal); transform: translateY(-1px); }
+    .btn-download {
+      padding: 0.8rem 1.8rem; background: transparent;
+      border: 1px solid var(--teal); color: var(--teal);
+      font-weight: 700; font-size: 0.85rem; letter-spacing: 0.07em;
+      text-transform: uppercase; text-decoration: none;
+      border-radius: 2px; transition: background 0.2s, color 0.2s, transform 0.15s;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-download:hover { background: var(--teal); color: #0F0F1A; transform: translateY(-1px); }
 
-    /* ── STATS BAR ── */
-    #stats {
-      background: var(--surface);
+    /* Hero inline stats (fast-scan row) */
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(3, auto);
+      gap: clamp(1.2rem, 4vw, 3rem);
+      padding-top: 1.6rem;
       border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 3.5rem 5vw;
+      width: fit-content;
     }
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 1rem; max-width: 900px; margin: 0 auto;
-    }
-    .stat-item { text-align: center; padding: 1rem; }
-    .stat-number {
+    .hero-stat-number {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(3rem, 6vw, 5rem);
+      font-size: clamp(2rem, 4.5vw, 3rem);
       font-weight: 800; color: var(--teal); line-height: 1;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.25rem;
     }
-    .stat-label {
-      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em;
+    .hero-stat-label {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em;
       text-transform: uppercase; color: var(--muted);
-    }
-    .stat-divider {
-      width: 1px; background: var(--border);
-      margin: 0 auto;
+      max-width: 130px; line-height: 1.3;
     }
 
     /* ── SECTIONS ── */
@@ -394,10 +403,49 @@
     .mobile-menu ul li:last-child a { border-bottom: none; }
     .mobile-menu ul li a:hover { color: var(--teal); background: rgba(0,212,170,0.05); }
 
+    /* ── QUICK HIGHLIGHTS STRIP ── */
+    #quick-highlights {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2.2rem 5vw;
+    }
+    .qh-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 1.2rem; text-align: center;
+    }
+    .qh-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; max-width: 1100px; margin: 0 auto;
+    }
+    .qh-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: 2px; padding: 1.1rem 1.3rem;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.2s, transform 0.15s;
+      display: block;
+    }
+    .qh-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+    .qh-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.05rem; font-weight: 700; color: var(--white);
+      line-height: 1.2; margin-bottom: 0.35rem;
+    }
+    .qh-card-result {
+      font-size: 0.8rem; color: var(--muted); line-height: 1.4;
+    }
+    .qh-card-result strong { color: var(--teal); }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .stat-divider { display: none; }
+      #hero { padding: 80px 6vw 32px; }
+      .hero-stats { grid-template-columns: repeat(3, 1fr); gap: 0.8rem; width: 100%; }
+      .hero-stat-label { max-width: none; }
+      .hero-cta { flex-direction: column; align-items: stretch; }
+      .hero-cta a { text-align: center; }
+      .qh-grid { grid-template-columns: 1fr; }
       #about .about-grid { grid-template-columns: 1fr; gap: 2rem; }
       .edu-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
@@ -448,8 +496,11 @@
   <div class="hero-eyebrow">PMP-Certified Project Manager · MBA</div>
   <h1 class="hero-name">Akil Craigg-<br>Williams</h1>
   <div class="hero-title">Project Manager & Operations Leader</div>
+  <p class="hero-pitch">
+    I cut costs, fix broken processes, and lead projects from idea to results — 40% cost savings and counting.
+  </p>
   <p class="hero-sub">
-    I turn complex operational challenges into measurable outcomes — driving digital transformation, aligning stakeholders, and delivering projects that stick. Based in New York City.
+    PMP-certified leader with 3+ years driving cross-functional initiatives and digital transformation in regulated healthcare environments. Based in New York City — open to hybrid or remote.
   </p>
   <div class="hero-badges">
     <span class="badge">PMP Certified</span>
@@ -458,26 +509,42 @@
     <span class="badge">Digital Transformation</span>
   </div>
   <div class="hero-cta">
-    <a href="#contact" class="btn-primary">Get In Touch</a>
-    <a href="#experience" class="btn-secondary">View My Work</a>
+    <a href="Akil_Craigg-Williams_Resume.pdf" download class="btn-download">⬇ Download Resume</a>
+    <a href="#projects" class="btn-primary">View Projects</a>
+    <a href="#contact" class="btn-secondary">Get In Touch</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-number">40%</div>
+      <div class="hero-stat-label">Cost Reduction via Automation</div>
+    </div>
+    <div>
+      <div class="hero-stat-number">$8K</div>
+      <div class="hero-stat-label">Weekly Savings Delivered</div>
+    </div>
+    <div>
+      <div class="hero-stat-number">15%</div>
+      <div class="hero-stat-label">Client Satisfaction Increase</div>
+    </div>
   </div>
 </section>
 
-<!-- STATS -->
-<div id="stats">
-  <div class="stats-grid">
-    <div class="stat-item reveal">
-      <div class="stat-number">40%</div>
-      <div class="stat-label">Cost Reduction via Automation</div>
-    </div>
-    <div class="stat-item reveal">
-      <div class="stat-number">$8K</div>
-      <div class="stat-label">Weekly Savings Delivered</div>
-    </div>
-    <div class="stat-item reveal">
-      <div class="stat-number">15%</div>
-      <div class="stat-label">Client Satisfaction Increase</div>
-    </div>
+<!-- QUICK HIGHLIGHTS -->
+<div id="quick-highlights">
+  <div class="qh-label">30-Second Project Snapshot</div>
+  <div class="qh-grid">
+    <a href="#projects" class="qh-card reveal">
+      <div class="qh-card-title">aLex Linen Machine Expansion</div>
+      <div class="qh-card-result"><strong>40% cost cut</strong> — led 12-machine rollout across vendor, IT & exec stakeholders</div>
+    </a>
+    <a href="#projects" class="qh-card reveal">
+      <div class="qh-card-title">TDSS Software Implementation</div>
+      <div class="qh-card-result"><strong>16 sites live</strong> — piloted & scaled a new inventory tracking system</div>
+    </a>
+    <a href="#projects" class="qh-card reveal">
+      <div class="qh-card-title">Lab Coat Rental Program</div>
+      <div class="qh-card-result"><strong>350 staff outfitted</strong> — pitched, built & launched a new compliance program</div>
+    </a>
   </div>
 </div>
 
