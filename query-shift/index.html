@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Query Shift is a free 5-minute daily SQL game for complete beginners through experienced analysts, built by Akil Craigg-Williams.">
+<meta property="og:title" content="Query Shift">
+<meta property="og:description" content="Learn SQL five minutes a day with short lessons and real queries against a sample hospital cafeteria database.">
+<title>Query Shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow column; home = shift card + unit track; play = order-ticket card with editor and result tray */
+:root{
+  --bg:#ECEFF5; --surface:#FFFFFF; --sunk:#F5F7FB; --ink:#172036; --muted:#5A6378; --line:#D3D9E5;
+  --accent:#2E50E6; --accent-ink:#FFFFFF; --accent-soft:#E2E8FF; --warm:#D9950F; --warm-soft:#FFF1D2;
+  --good:#17895B; --good-soft:#DDF4E9; --bad:#C63D33; --bad-soft:#FBE3E1;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1220; --surface:#171C2D; --sunk:#11162A; --ink:#E7EAF3; --muted:#9AA3B8; --line:#2A3149;
+  --accent:#7F97FF; --accent-ink:#0E1220; --accent-soft:#242E57; --warm:#F2B740; --warm-soft:#3A2F14;
+  --good:#45C88E; --good-soft:#15362A; --bad:#FF7A6E; --bad-soft:#3E1C1B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1220; --surface:#171C2D; --sunk:#11162A; --ink:#E7EAF3; --muted:#9AA3B8; --line:#2A3149;
+  --accent:#7F97FF; --accent-ink:#0E1220; --accent-soft:#242E57; --warm:#F2B740; --warm-soft:#3A2F14;
+  --good:#45C88E; --good-soft:#15362A; --bad:#FF7A6E; --bad-soft:#3E1C1B; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,.unit:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.label{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:26px;font-weight:800}
+.brand h1 span{color:var(--accent)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font:600 13px/1 var(--f-body);font-variant-numeric:tabular-nums}
+.pill.streak{background:var(--warm-soft);border-color:transparent;color:var(--warm)}
+.pill svg{width:14px;height:14px}
+
+/* shift card */
+.shift{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:24px;display:grid;gap:16px;position:relative;overflow:hidden}
+.shift::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;
+  background:repeating-radial-gradient(circle, transparent 0 14px, color-mix(in srgb, var(--accent-ink) 14%, transparent) 14px 16px)}
+.shift h2{font-size:clamp(28px,6vw,40px);font-weight:800;line-height:1.05;max-width:16ch;position:relative}
+.shift p{margin:0;max-width:44ch;opacity:.9;position:relative}
+.shift .row{display:flex;gap:10px;flex-wrap:wrap;position:relative;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.invert{background:var(--accent-ink);color:var(--accent)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.done-note{font-weight:600;position:relative}
+
+/* units */
+.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.section-head h2{font-size:20px}
+.units{display:grid;gap:10px}
+.unit{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-align:left;width:100%}
+.unit .num{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font:700 16px var(--f-mono);background:var(--sunk);color:var(--muted)}
+.unit.current .num{background:var(--accent);color:var(--accent-ink)}
+.unit.complete .num{background:var(--good-soft);color:var(--good)}
+.unit.locked{opacity:.55;cursor:not-allowed}
+.unit .name{font-weight:600}
+.unit .sub{font-size:13px;color:var(--muted)}
+.unit .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font:600 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:72px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:3px}
+.unit.current .bar i{background:var(--accent)}
+.foot{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;font-size:13px}
+
+/* play */
+.playhead{display:flex;align-items:center;gap:12px}
+.dots{display:flex;gap:6px;flex:1}
+.dots i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.dots i.ok{background:var(--good)}
+.dots i.skip{background:var(--warm)}
+.timer{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px;text-align:right}
+.timer.low{color:var(--warm)}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.iconbtn svg{width:18px;height:18px}
+
+.ticket{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.ticket-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 18px;border-bottom:2px dashed var(--line);background:var(--sunk)}
+.ticket-top .mono{font-size:12px;color:var(--muted)}
+.tag{font:600 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.tag.review{background:var(--warm-soft);color:var(--warm)}
+.ticket-body{padding:18px;display:grid;gap:14px}
+.ticket-body h3{font-size:24px;font-weight:700}
+.prompt{margin:0;font-size:17px;max-width:60ch}
+.prompt b{font-family:var(--f-mono);font-weight:600;font-size:.92em;background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:5px}
+.hint{background:var(--warm-soft);border-radius:10px;padding:10px 14px;font-size:14px}
+.hint code,.answer code{font-family:var(--f-mono)}
+.answer{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:14px/1.5 var(--f-mono);overflow-x:auto;white-space:pre-wrap}
+
+.editor{position:relative}
+textarea{width:100%;min-height:120px;resize:vertical;border:1.5px solid var(--line);border-radius:12px;background:var(--sunk);color:var(--ink);
+  font:16px/1.55 var(--f-mono);padding:12px 14px;tab-size:2}
+textarea:focus{border-color:var(--accent);outline:none}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px;font:600 13px var(--f-mono);color:var(--muted)}
+.chip:active{background:var(--accent-soft);color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.actions .spacer{flex:1}
+.kbd{font:12px var(--f-mono);color:var(--muted)}
+
+.feedback{border-radius:12px;padding:12px 14px;font-weight:500;display:flex;gap:10px;align-items:flex-start}
+.feedback.ok{background:var(--good-soft);color:var(--good)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.feedback.info{background:var(--sunk);color:var(--muted)}
+.feedback small{display:block;font-weight:400;color:var(--ink);opacity:.8;margin-top:2px}
+
+.result{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.result-head{display:flex;justify-content:space-between;padding:8px 12px;background:var(--sunk);border-bottom:1px solid var(--line)}
+.tablewrap{overflow-x:auto;max-height:280px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;font:13px/1.4 var(--f-mono);font-variant-numeric:tabular-nums}
+th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);color:var(--muted);font-weight:600}
+td.num{text-align:right}
+tr:last-child td{border-bottom:0}
+.empty{padding:14px;color:var(--muted);font-size:14px}
+
+/* schema drawer */
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px}
+.schema{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tbl{background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
+.tbl h4{margin:0 0 6px;font:600 14px var(--f-mono);color:var(--accent)}
+.tbl ul{list-style:none;margin:0;padding:0;font:12.5px/1.6 var(--f-mono)}
+.tbl li span{color:var(--muted)}
+
+/* summary */
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;display:grid;gap:18px}
+.summary h2{font-size:32px;font-weight:800}
+.tally{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tally div{background:var(--sunk);border-radius:12px;padding:12px}
+.tally b{display:block;font:800 28px var(--f-display);font-variant-numeric:tabular-nums}
+.tally span{font-size:13px;color:var(--muted)}
+.reslist{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.reslist li{display:flex;gap:10px;align-items:center;font-size:15px}
+.reslist i{width:10px;height:10px;border-radius:50%;flex:none}
+
+
+/* beginner additions */
+.welcome{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;display:grid;gap:12px}
+.welcome h2{font-size:clamp(28px,6vw,38px);font-weight:800;line-height:1.08}
+.welcome p{margin:0;max-width:62ch}
+.welcome code,.explain code,.excel code,.prompt code{font-family:var(--f-mono);font-size:.9em;background:var(--sunk);padding:1px 5px;border-radius:5px}
+.choices{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.choice{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:4px}
+.choice b{font:700 18px var(--f-display)}
+.choice span{font-size:14px;color:var(--muted)}
+.choice:hover{border-color:var(--accent)}
+.howto{display:grid;gap:10px}
+.howto.inset{background:var(--sunk);border-radius:12px;padding:14px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.steps li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted)}
+.steps b{color:var(--ink)}
+.stepnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:700 13px var(--f-mono)}
+.sub-note{margin:-6px 0 0;font-size:14px;color:var(--muted)}
+.bigcode{display:block;font:600 16px/1.5 var(--f-mono);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;overflow-x:auto;white-space:pre-wrap;color:var(--ink)}
+.prompt .bigcode{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.excel{background:var(--good-soft);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.excel .label{color:var(--good)}
+.excel p{margin:0}
+.explain{margin:0;max-width:62ch}
+.example{display:grid;gap:4px}
+.parts{margin:0;display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.parts div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.parts div:last-child{border-bottom:0}
+.parts dt code{font:600 13px var(--f-mono);color:var(--accent);word-break:break-word}
+.parts dd{margin:0;font-size:14px}
+.tag.lesson{background:var(--good-soft);color:var(--good)}
+.dots i.lesson{flex:.5}
+.titlerow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.btn.small{padding:7px 11px;font-size:13px;border-radius:9px}
+.btn svg{width:15px;height:15px}
+.guidebox{border:1px dashed var(--line);border-radius:12px;padding:14px;display:grid;gap:12px}
+.peek{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.peek summary{cursor:pointer;padding:9px 12px;font-size:14px;font-weight:600;background:var(--sunk)}
+.peek summary span{color:var(--muted);font-weight:400}
+.peek summary code{font-family:var(--f-mono)}
+.peek .result{border:0;border-top:1px solid var(--line);border-radius:0}
+.morerows{padding:6px 12px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+.answer-actions{margin-top:8px}
+#expSlot .result{border-style:dashed}
+
+@media (max-width:480px){
+  .ticket-body{padding:14px}
+  .shift{padding:20px}
+  .unit{grid-template-columns:38px 1fr auto;gap:10px;padding:12px}
+  .unit .num{width:38px;height:38px}
+  .kbd{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .pop{animation:pop .28s ease-out}
+  @keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
+}
+</style>
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh}
+[hidden]{display:none!important}
+.backlink{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--f-body);color:var(--muted);text-decoration:none;padding:4px 0}
+.backlink:hover{color:var(--accent)}
+.site-foot{max-width:720px;margin:28px auto 0;font-size:13px;color:var(--muted);text-align:center}
+.site-foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div style="max-width:720px;margin:0 auto 12px"><a class="backlink" href="../#projects">&larr; Akil Craigg-Williams portfolio</a></div>
+
+
+<div class="wrap" id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+<script>
+const SCHEMA = {
+  stations: {
+    cols: ["station_id INT", "name STRING", "floor INT"],
+    rows: [
+      [1, "Main Grill", 1], [2, "Salad Bar", 1], [3, "Coffee Cart", 2], [4, "Deli", 1], [5, "Night Kiosk", 3]
+    ]
+  },
+  menu_items: {
+    cols: ["item_id INT", "name STRING", "category STRING", "price NUMBER", "calories INT"],
+    rows: [
+      [1, "Turkey Club", "Sandwich", 8.5, 610], [2, "Veggie Wrap", "Sandwich", 7.25, 430],
+      [3, "Garden Salad", "Salad", 6.75, 220], [4, "Chicken Caesar", "Salad", 9.0, 480],
+      [5, "Cheeseburger", "Grill", 9.5, 820], [6, "Grilled Chicken Plate", "Grill", 11.0, 560],
+      [7, "Fries", "Side", 3.25, 380], [8, "Fruit Cup", "Side", 3.75, 90],
+      [9, "Coffee", "Drink", 2.25, 5], [10, "Iced Latte", "Drink", 4.5, 190],
+      [11, "Bottled Water", "Drink", 1.75, 0], [12, "Tomato Soup", "Soup", 4.25, 250], [13, "Oatmeal", "Breakfast", 3.5, 300], [14, "Egg Sandwich", "Sandwich", 5.25, 450]
+    ]
+  },
+  orders: {
+    cols: ["order_id INT", "item_id INT", "qty INT", "order_date STRING", "station_id INT", "payment STRING"],
+    rows: [
+      [101, 5, 2, "2026-10-05", 1, "Card"], [102, 9, 3, "2026-10-05", 3, "Badge"],
+      [103, 3, 1, "2026-10-05", 2, "Card"], [104, 1, 1, "2026-10-06", 4, "Cash"],
+      [105, 7, 4, "2026-10-06", 1, "Card"], [106, 10, 2, "2026-10-06", 3, "Badge"],
+      [107, 6, 1, "2026-10-07", 1, "Badge"], [108, 4, 2, "2026-10-07", 2, "Card"],
+      [109, 12, 3, "2026-10-07", 4, "Cash"], [110, 9, 5, "2026-10-08", 3, "Badge"],
+      [111, 2, 2, "2026-10-08", 4, "Card"], [112, 11, 6, "2026-10-08", 5, "Cash"],
+      [113, 5, 1, "2026-10-09", 1, "Card"], [114, 8, 2, "2026-10-09", 2, "Badge"],
+      [115, 10, 1, "2026-10-09", 3, "Card"], [116, 9, 2, "2026-10-09", 5, "Cash"],
+      [117, 6, 3, "2026-10-10", 1, "Badge"], [118, 3, 2, "2026-10-10", 2, "Card"]
+    ]
+  },
+  staff: {
+    cols: ["staff_id INT", "name STRING", "role STRING", "station_id INT", "hourly_rate NUMBER", "hire_year INT"],
+    rows: [
+      [1, "Dana Ortiz", "Supervisor", 1, 26.0, 2015], [2, "Marcus Lee", "Cook", 1, 21.5, 2019],
+      [3, "Priya Shah", "Barista", 3, 18.75, 2022], [4, "Tom Reyes", "Cashier", 4, 17.5, 2023],
+      [5, "Aisha Grant", "Cook", 4, 21.0, 2018], [6, "Leo Park", "Attendant", 2, 17.0, 2024],
+      [7, "Nina Brooks", "Barista", 3, 19.25, 2020], [8, "Sam Cole", "Attendant", 5, 17.25, 2021]
+    ]
+  }
+};
+
+const UNITS = [
+  { id: "select", name: "SELECT basics", blurb: "Pull columns out of a table." , lessons: [
+    { t: "Your very first query", table: "stations", p: "Copy this exactly into the box below, then press <b>Check</b>:<br><code class=\"bigcode\">SELECT * FROM stations</code>It means: “show me everything in the stations table.” Capital letters are optional, but they make keywords easy to spot.", h: "Type the letters exactly as shown, including the star (*). Spaces between words matter.", s: "SELECT * FROM stations" },
+    { t: "Look at everything", table: "menu_items", starter: "SELECT * FROM ", p: "Now show every column and every row from the <b>menu_items</b> table. We started the query for you. Finish it by typing the table name at the end.", h: "The query should read: SELECT * FROM menu_items", s: "SELECT * FROM menu_items" },
+    { t: "Pick two columns", table: "menu_items", starter: "SELECT ___, ___ FROM menu_items", p: "Instead of everything, show only the <b>name</b> and <b>price</b> columns. Replace each <b>___</b> with a column name.", h: "Swap the blanks for column names: SELECT name, price FROM menu_items. The comma separates columns.", s: "SELECT name, price FROM menu_items" },
+    { t: "Meet the team", table: "staff", starter: "SELECT ___, ___ FROM ___", p: "Show the <b>name</b> and <b>role</b> of everyone in the <b>staff</b> table. Fill in all three blanks.", h: "Two columns after SELECT, then the table after FROM: SELECT name, role FROM staff", s: "SELECT name, role FROM staff" },
+    { t: "Write it yourself", table: "stations", p: "No starter this time. Show the <b>name</b> and <b>floor</b> of every station in the <b>stations</b> table.", h: "Same pattern as before: SELECT column, column FROM table", s: "SELECT name, floor FROM stations" },
+    { t: "Unique values", table: "menu_items", p: "List each <b>category</b> in menu_items once, with no repeats.", h: "Put DISTINCT right after SELECT.", s: "SELECT DISTINCT category FROM menu_items" },
+    { t: "Rename a column", table: "menu_items", p: "Show each item's <b>name</b> and its price labeled <b>cost</b>.", h: "Use AS to give a column a new name: price AS cost", s: "SELECT name, price AS cost FROM menu_items" },
+    { t: "Do some math", table: "menu_items", p: "Show each item's <b>name</b> and its price with a $1.00 upcharge, labeled <b>new_price</b>.", h: "You can add numbers inside SELECT: price + 1", s: "SELECT name, price + 1 AS new_price FROM menu_items" }
+  ]},
+  { id: "where", name: "Filtering with WHERE", blurb: "Keep only the rows you need.", lessons: [
+    { t: "Under budget", table: "menu_items", starter: "SELECT name, price FROM menu_items WHERE price ___", p: "Show the <b>name</b> and <b>price</b> of items that cost less than $5. Finish the WHERE line: replace <b>___</b> with the condition.", h: "WHERE price < 5", s: "SELECT name, price FROM menu_items WHERE price < 5" },
+    { t: "Exact match", table: "menu_items", p: "Show all columns for items in the <b>Drink</b> category.", h: "Text goes in single quotes: WHERE category = 'Drink'", s: "SELECT * FROM menu_items WHERE category = 'Drink'" },
+    { t: "Two conditions", table: "menu_items", p: "Show the <b>name</b> of Salad items under 500 calories.", h: "Join conditions with AND.", s: "SELECT name FROM menu_items WHERE category = 'Salad' AND calories < 500" },
+    { t: "Either one", table: "orders", p: "Show all orders paid with <b>Cash</b> or <b>Badge</b>.", h: "Use OR, or try payment IN ('Cash', 'Badge').", s: "SELECT * FROM orders WHERE payment IN ('Cash', 'Badge')" },
+    { t: "In a range", table: "staff", p: "Show the <b>name</b> and <b>hourly_rate</b> of staff earning between $18 and $22 an hour.", h: "BETWEEN 18 AND 22 includes both ends.", s: "SELECT name, hourly_rate FROM staff WHERE hourly_rate BETWEEN 18 AND 22" },
+    { t: "Text patterns", table: "menu_items", p: "Show the <b>name</b> of every menu item that contains the word <b>Chicken</b>.", h: "LIKE '%Chicken%' matches anything before or after.", s: "SELECT name FROM menu_items WHERE name LIKE '%Chicken%'" }
+  ]},
+  { id: "sort", name: "Sorting & limits", blurb: "Order results and grab the top few.", lessons: [
+    { t: "Cheapest first", p: "Show <b>name</b> and <b>price</b> of all items, cheapest first.", h: "ORDER BY price sorts low to high.", s: "SELECT name, price FROM menu_items ORDER BY price", ordered: true },
+    { t: "Highest first", p: "Show staff <b>name</b> and <b>hourly_rate</b>, highest paid first.", h: "Add DESC after the column.", s: "SELECT name, hourly_rate FROM staff ORDER BY hourly_rate DESC", ordered: true },
+    { t: "Top 3", p: "Show the <b>name</b> and <b>calories</b> of the 3 highest-calorie items.", h: "Sort DESC, then LIMIT 3 at the end.", s: "SELECT name, calories FROM menu_items ORDER BY calories DESC LIMIT 3", ordered: true },
+    { t: "Two-level sort", p: "Show <b>category</b>, <b>name</b>, <b>price</b> for all items, sorted by category A–Z, then most expensive first within each category.", h: "ORDER BY category, price DESC", s: "SELECT category, name, price FROM menu_items ORDER BY category, price DESC", ordered: true },
+    { t: "Most recent orders", p: "Show the 5 most recent orders (all columns). Break ties by highest <b>order_id</b>.", h: "ORDER BY order_date DESC, order_id DESC LIMIT 5", s: "SELECT * FROM orders ORDER BY order_date DESC, order_id DESC LIMIT 5", ordered: true }
+  ]},
+  { id: "agg", name: "Counting & totals", blurb: "COUNT, SUM, AVG, MIN, MAX.", lessons: [
+    { t: "How many?", p: "Count how many rows are in <b>orders</b>.", h: "SELECT COUNT(*) FROM orders", s: "SELECT COUNT(*) AS n FROM orders" },
+    { t: "Units sold", p: "Find the total <b>qty</b> sold across all orders.", h: "SUM(qty)", s: "SELECT SUM(qty) AS units FROM orders" },
+    { t: "Average pay", p: "Find the average <b>hourly_rate</b> of all staff.", h: "AVG(hourly_rate)", s: "SELECT AVG(hourly_rate) AS avg_rate FROM staff" },
+    { t: "Price range", p: "Show the lowest and highest menu price in one row.", h: "SELECT MIN(price), MAX(price) FROM ...", s: "SELECT MIN(price) AS low, MAX(price) AS high FROM menu_items" },
+    { t: "Filtered count", p: "Count how many orders were paid by <b>Card</b>.", h: "COUNT(*) with a WHERE clause.", s: "SELECT COUNT(*) AS n FROM orders WHERE payment = 'Card'" }
+  ]},
+  { id: "group", name: "GROUP BY", blurb: "Totals per category, station, or day.", lessons: [
+    { t: "Items per category", p: "Show each <b>category</b> and how many menu items it has.", h: "SELECT category, COUNT(*) ... GROUP BY category", s: "SELECT category, COUNT(*) AS n FROM menu_items GROUP BY category" },
+    { t: "Units by payment", p: "Show each <b>payment</b> type and the total <b>qty</b> sold with it.", h: "GROUP BY payment, SUM(qty)", s: "SELECT payment, SUM(qty) AS units FROM orders GROUP BY payment" },
+    { t: "Daily volume", p: "Show each <b>order_date</b> and its number of orders, oldest day first.", h: "GROUP BY order_date, then ORDER BY order_date", s: "SELECT order_date, COUNT(*) AS n FROM orders GROUP BY order_date ORDER BY order_date", ordered: true },
+    { t: "Pay by role", p: "Show each <b>role</b> and its average <b>hourly_rate</b>, highest average first.", h: "GROUP BY role ORDER BY the AVG DESC", s: "SELECT role, AVG(hourly_rate) AS avg_rate FROM staff GROUP BY role ORDER BY avg_rate DESC", ordered: true },
+    { t: "Busy stations only", p: "Show each <b>station_id</b> with its order count, but only stations with more than 3 orders.", h: "Filter groups with HAVING COUNT(*) > 3 (WHERE can't see counts).", s: "SELECT station_id, COUNT(*) AS n FROM orders GROUP BY station_id HAVING COUNT(*) > 3" }
+  ]},
+  { id: "join", name: "JOINs", blurb: "Combine tables using shared keys.", lessons: [
+    { t: "Name the items", p: "Show each <b>order_id</b>, the item <b>name</b>, and the <b>qty</b>.", h: "FROM orders o JOIN menu_items m ON o.item_id = m.item_id", s: "SELECT o.order_id, m.name, o.qty FROM orders o JOIN menu_items m ON o.item_id = m.item_id" },
+    { t: "Who works where", p: "Show each staff member's <b>name</b> and the <b>name</b> of their station. Label them staff_name and station_name.", h: "JOIN stations st ON s.station_id = st.station_id", s: "SELECT s.name AS staff_name, st.name AS station_name FROM staff s JOIN stations st ON s.station_id = st.station_id" },
+    { t: "Revenue per order", p: "Show each <b>order_id</b> and its revenue (<b>qty × price</b>) labeled <b>revenue</b>.", h: "Join to menu_items, then o.qty * m.price", s: "SELECT o.order_id, o.qty * m.price AS revenue FROM orders o JOIN menu_items m ON o.item_id = m.item_id" },
+    { t: "Revenue by category", p: "Show each menu <b>category</b> and its total revenue (qty × price), highest first.", h: "JOIN, then GROUP BY m.category with SUM(o.qty * m.price)", s: "SELECT m.category, SUM(o.qty * m.price) AS revenue FROM orders o JOIN menu_items m ON o.item_id = m.item_id GROUP BY m.category ORDER BY revenue DESC", ordered: true },
+    { t: "Never ordered", p: "Show the <b>name</b> of every menu item that has no orders.", h: "LEFT JOIN orders, then WHERE o.order_id IS NULL", s: "SELECT m.name FROM menu_items m LEFT JOIN orders o ON m.item_id = o.item_id WHERE o.order_id IS NULL" }
+  ]},
+  { id: "adv", name: "Subqueries & CASE", blurb: "Logic and queries inside queries.", lessons: [
+    { t: "Above average", p: "Show the <b>name</b> and <b>price</b> of items priced above the average menu price.", h: "WHERE price > (SELECT AVG(price) FROM menu_items)", s: "SELECT name, price FROM menu_items WHERE price > (SELECT AVG(price) FROM menu_items)" },
+    { t: "Label it", p: "Show each item's <b>name</b> and a column <b>tier</b>: 'Budget' if price is under 5, otherwise 'Standard'.", h: "CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier", s: "SELECT name, CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier FROM menu_items" },
+    { t: "Drink orders", p: "Show all orders (all columns) for items in the <b>Drink</b> category, using a subquery instead of a JOIN.", h: "WHERE item_id IN (SELECT item_id FROM menu_items WHERE ...)", s: "SELECT * FROM orders WHERE item_id IN (SELECT item_id FROM menu_items WHERE category = 'Drink')" },
+    { t: "Count by tier", p: "Count how many staff are 'Senior' (hired before 2020) vs 'Newer'. Show <b>tier</b> and <b>n</b>.", h: "GROUP BY the same CASE expression you SELECT.", s: "SELECT CASE WHEN hire_year < 2020 THEN 'Senior' ELSE 'Newer' END AS tier, COUNT(*) AS n FROM staff GROUP BY CASE WHEN hire_year < 2020 THEN 'Senior' ELSE 'Newer' END" }
+  ]}
+];
+
+const GUIDES = {
+  select: {
+    excel: "A table is like an Excel sheet: columns across the top, one record per row. SELECT is like choosing which columns to show.",
+    explain: "Every query you write in this unit has two parts. <b>SELECT</b> says which columns you want. <b>FROM</b> says which table they live in. The star <code>*</code> is shorthand for “all columns.”",
+    example: "SELECT name, price FROM menu_items",
+    parts: [["SELECT", "Start a question: “show me…”"], ["name, price", "…these columns, separated by commas…"], ["FROM menu_items", "…from the menu_items table."]]
+  },
+  where: {
+    excel: "WHERE works like Excel's Filter button: it hides the rows that don't match your rule.",
+    explain: "Add <b>WHERE</b> after FROM to keep only rows that pass a test. Numbers compare with <code>&lt; &gt; = &lt;= &gt;=</code>. Text goes in single quotes, like <code>'Drink'</code>. Combine tests with <b>AND</b> (both must be true) or <b>OR</b> (either one).",
+    example: "SELECT name, price FROM menu_items WHERE price < 5",
+    parts: [["SELECT name, price", "Show these columns"], ["FROM menu_items", "from this table"], ["WHERE price < 5", "but only rows where price is under 5"]]
+  },
+  sort: {
+    excel: "ORDER BY is Excel's Sort A→Z or Z→A. LIMIT is like keeping only the top few rows.",
+    explain: "<b>ORDER BY</b> goes near the end and sorts results. It sorts low-to-high by default; add <b>DESC</b> for high-to-low. <b>LIMIT 3</b> at the very end keeps only the first 3 rows.",
+    example: "SELECT name, price FROM menu_items ORDER BY price DESC LIMIT 3",
+    parts: [["SELECT name, price FROM menu_items", "Get names and prices"], ["ORDER BY price DESC", "sort by price, highest first"], ["LIMIT 3", "keep only the top 3"]]
+  },
+  agg: {
+    excel: "These are SQL's version of =COUNT(), =SUM(), =AVERAGE(), =MIN() and =MAX() at the bottom of a column.",
+    explain: "An aggregate squeezes many rows into one answer. <code>COUNT(*)</code> counts rows, <code>SUM(qty)</code> adds a column, <code>AVG()</code> averages it. <b>AS</b> gives the answer a label.",
+    example: "SELECT SUM(qty) AS units FROM orders",
+    parts: [["SUM(qty)", "Add up the qty column"], ["AS units", "call the answer “units”"], ["FROM orders", "using every row in orders"]]
+  },
+  group: {
+    excel: "GROUP BY is a pivot table. The GROUP BY column becomes your row labels; the COUNT or SUM becomes the values.",
+    explain: "<b>GROUP BY</b> splits rows into piles that share a value, then runs your COUNT or SUM once per pile. Whatever you group by should also appear in SELECT. To filter the piles themselves, use <b>HAVING</b> instead of WHERE.",
+    example: "SELECT payment, SUM(qty) AS units FROM orders GROUP BY payment",
+    parts: [["SELECT payment", "Show each payment type"], ["SUM(qty) AS units", "and the total qty for it"], ["GROUP BY payment", "making one row per payment type"]]
+  },
+  join: {
+    excel: "A JOIN does what VLOOKUP or XLOOKUP does: it pulls matching info from another table using a shared ID.",
+    explain: "The orders table only stores <code>item_id</code>, not the item's name. <b>JOIN … ON</b> matches each order to its menu item where the IDs are equal. Short nicknames (<code>o</code>, <code>m</code>) tell SQL which table each column comes from.",
+    example: "SELECT o.order_id, m.name FROM orders o JOIN menu_items m ON o.item_id = m.item_id",
+    parts: [["FROM orders o", "Start with orders, nicknamed o"], ["JOIN menu_items m", "bring in menu_items, nicknamed m"], ["ON o.item_id = m.item_id", "match rows where the IDs are the same"], ["SELECT o.order_id, m.name", "show the order number and item name"]]
+  },
+  adv: {
+    excel: "CASE WHEN is SQL's =IF() formula. A subquery is like using one cell's result inside another formula.",
+    explain: "<b>CASE WHEN</b> creates a new column from a rule: <code>CASE WHEN test THEN 'A' ELSE 'B' END</code>. A <b>subquery</b> is a query inside parentheses whose answer feeds the outer query.",
+    example: "SELECT name, CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier FROM menu_items",
+    parts: [["CASE WHEN price < 5", "If the price is under 5…"], ["THEN 'Budget'", "…write Budget"], ["ELSE 'Standard' END", "otherwise write Standard"], ["AS tier", "and name that column tier"]]
+  }
+};
+
+</script>
+<script>
+(function(){
+"use strict";
+const $ = (s, el=document) => el.querySelector(s);
+const app = $("#app");
+const SESSION_SIZE = 5, SESSION_SECONDS = 300;
+
+// ---------- flatten lessons ----------
+const ALL = [];
+UNITS.forEach((u, ui) => u.lessons.forEach((l, li) => ALL.push({ ...l, key: u.id + ":" + li, unit: ui, idx: li })));
+
+// ---------- storage ----------
+const STORE_KEY = "query-shift-v1";
+function load(){
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) return Object.assign(fresh(), JSON.parse(raw)); } catch(e) {}
+  return fresh();
+}
+function fresh(){ return { done:{}, xp:0, streak:0, best:0, lastDay:null, sessions:0, level:null, startAt:0, openAll:false, seen:{} }; }
+function save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) {} }
+let S = load();
+
+function today(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function yesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return today(d); }
+function liveStreak(){ return (S.lastDay === today() || S.lastDay === yesterday()) ? S.streak : 0; }
+
+// ---------- progress ----------
+function unitDone(ui){ return UNITS[ui].lessons.every((_, li) => S.done[UNITS[ui].id+":"+li]); }
+function unitCount(ui){ return UNITS[ui].lessons.filter((_, li) => S.done[UNITS[ui].id+":"+li]).length; }
+function unitUnlocked(ui){ return S.openAll || ui <= S.startAt || unitDone(ui-1); }
+function currentUnit(){
+  for (let i=S.startAt;i<UNITS.length;i++) if (!unitDone(i)) return i;
+  for (let i=0;i<UNITS.length;i++) if (!unitDone(i)) return i;
+  return UNITS.length-1;
+}
+const LEVELS = { new:"Complete beginner", some:"Know the basics", brush:"Brushing up" };
+function setLevel(lv){
+  S.level = lv; S.startAt = lv === "some" ? 2 : 0; S.openAll = lv === "brush";
+  if (lv === "brush") UNITS.forEach(u => S.seen[u.id] = true);
+  save();
+}
+function level(){ return Math.floor(S.xp/50)+1; }
+function totalDone(){ return ALL.filter(l => S.done[l.key]).length; }
+
+// seeded shuffle so a day's review pick is stable
+function seeded(seed){ let h=0; for (const c of seed) h=(h*31+c.charCodeAt(0))|0; return () => { h=(h*1103515245+12345)|0; return ((h>>>0)%10000)/10000; }; }
+function shuffle(arr, rnd){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function buildDaily(){
+  const rnd = seeded(today());
+  let fresh = ALL.filter(l => !S.done[l.key] && unitUnlocked(l.unit) && (S.openAll || l.unit >= Math.min(S.startAt, currentUnit())));
+  if (S.openAll) fresh = shuffle(fresh, rnd);
+  else { const cu = currentUnit(); fresh = fresh.filter(l => l.unit >= cu).concat(fresh.filter(l => l.unit < cu)); }
+  const solved = shuffle(ALL.filter(l => S.done[l.key]), rnd);
+  let picks = [];
+  const reviewCount = solved.length ? 1 : 0;
+  picks = fresh.slice(0, SESSION_SIZE - reviewCount).map(l => ({ l, review:false }));
+  for (const l of solved) { if (picks.length >= SESSION_SIZE) break; picks.push({ l, review:true }); }
+  return picks;
+}
+function buildPractice(ui){
+  const rnd = seeded(today()+ui+Math.random());
+  const left = ALL.filter(l => l.unit === ui && !S.done[l.key]);
+  const pool = left.length ? left.concat(shuffle(ALL.filter(l => l.unit === ui && S.done[l.key]), rnd)) : shuffle(ALL.filter(l => l.unit === ui), rnd);
+  return pool.slice(0, SESSION_SIZE).map(l => ({ l, review: !!S.done[l.key] }));
+}
+
+// ---------- SQL engine ----------
+function makeDb(){
+  const db = new alasql.Database();
+  for (const [t, d] of Object.entries(SCHEMA)) {
+    db.exec("CREATE TABLE " + t + " (" + d.cols.join(",") + ")");
+    db.tables[t].data = d.rows.map(r => { const o={}; d.cols.forEach((c,i)=>o[c.split(" ")[0]]=r[i]); return o; });
+  }
+  return db;
+}
+function runSql(sql){
+  const q = sql.trim().replace(/;+\s*$/,"");
+  if (!q) return { error:"Type a query first.", tip:"Every query starts with the word SELECT." };
+  if (q.includes("___")) return { error:"Fill in the blanks first.", tip:"Replace each ___ with a column or table name. Open the table preview above to see the column names." };
+  if (q.includes(";")) return { error:"Run one query at a time.", tip:"Remove the extra semicolon." };
+  if (!/^\s*(select|with)\b/i.test(q)) return { error:"Only SELECT queries run here.", tip:"Every challenge can be solved with SELECT." };
+  try {
+    const rows = makeDb().exec(q);
+    if (!Array.isArray(rows)) return { error:"That query didn't return a table.", tip:"Make sure it starts with SELECT." };
+    return { rows };
+  } catch(e) {
+    const msg = String(e && e.message || e);
+    let tip = "Check spelling, commas between columns, and quotes around text.";
+    const m = msg.match(/got '([A-Z_]+)'/);
+    if (m && !["EOF","COMMA"].includes(m[1])) tip = "Something is off near “" + m[1].toLowerCase() + "”. If you used it as a column alias, some words (total, count, value, date) are reserved, so pick another name.";
+    if (/Table .*does not exist/i.test(msg)) tip = "That table name doesn't exist. Tap the grid icon at the top to see the four table names.";
+    if (/Column .*(does not exist|not found)/i.test(msg)) tip = "Check the column name against the Tables list.";
+    const first = msg.split("\n")[0]; return { error: /^Parse error/i.test(first) ? "That query has a syntax error." : first.slice(0,140), tip };
+  }
+}
+function canon(v){ if (typeof v === "number") return String(Math.round(v*100)/100); if (v === null || v === undefined) return "∅"; return String(v); }
+function rowKey(r){ return Object.values(r).map(canon).sort().join("\u0001"); }
+function sameResult(user, sol, ordered){
+  if (user.length !== sol.length) return { ok:false, why:"Your result has " + user.length + " row" + (user.length===1?"":"s") + "; the answer has " + sol.length + "." };
+  const uc = user[0] ? Object.keys(user[0]).length : 0, sc = sol[0] ? Object.keys(sol[0]).length : 0;
+  if (uc !== sc) return { ok:false, why:"Your result has " + uc + " column" + (uc===1?"":"s") + "; the answer has " + sc + "." };
+  let a = user.map(rowKey), b = sol.map(rowKey);
+  if (ordered) {
+    if (a.join("|") === b.join("|")) return { ok:true };
+    const as = a.slice().sort().join("|"), bs = b.slice().sort().join("|");
+    if (as === bs) return { ok:false, why:"Right rows, wrong order. Check your ORDER BY." };
+    return { ok:false, why:"Some values don't match yet." };
+  }
+  if (a.sort().join("|") === b.sort().join("|")) return { ok:true };
+  return { ok:false, why:"Same size, but some values don't match yet." };
+}
+
+// ---------- icons ----------
+const I = {
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5-1.5 5-1.5 7.5 0 1.4 1 2.5 2.3 2.5 1.6 0 2.4-1.4 2.2-3.2C17.5 10.6 19 13 19 15.5 19 19.1 15.9 22 12 22s-7-2.9-7-6.5C5 10 10.5 7.5 12 2z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- views ----------
+let session = null, timerId = null;
+I.book = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5"/></svg>';
+
+function header(){
+  return `<div class="top">
+    <div class="brand"><h1>Query<span>Shift</span></h1></div>
+    <div class="stats">
+      <span class="pill streak" title="Day streak">${I.flame}${liveStreak()} day${liveStreak()===1?"":"s"}</span>
+      <span class="pill" title="Experience points">${I.star}${S.xp} XP</span>
+      <span class="pill" title="Level">Lv ${level()}</span>
+    </div></div>`;
+}
+
+const HOW = [
+  ["Read the ticket", "Each ticket asks one question about the cafeteria data."],
+  ["Write a query", "Type SQL in the box. Tap the keyword buttons if you're on a phone."],
+  ["Press Run", "See what your query returns. Running is free, so experiment."],
+  ["Press Check", "We compare your result to the answer. Stuck? Use Hint."]
+];
+function howSteps(){ return `<ol class="steps">${HOW.map((h,i)=>`<li><span class="stepnum">${i+1}</span><span><b>${h[0]}</b><br>${h[1]}</span></li>`).join("")}</ol>`; }
+
+function renderWelcome(){
+  stopTimer(); session = null;
+  app.innerHTML = `
+    <div class="top"><div class="brand"><h1>Query<span>Shift</span></h1></div></div>
+    <section class="welcome pop">
+      <span class="label">Welcome</span>
+      <h2>Learn SQL five minutes at a time.</h2>
+      <p><b>SQL</b> is the language people use to ask a database questions. In Excel you click Filter, Sort, or build a pivot table. In SQL you type the request instead, like <code class="mono">SELECT name FROM staff</code>, and the database hands back a table with the answer.</p>
+      <p>Every day you get a short “shift” of 5 tickets using the data from <b>Brookside Kitchen</b>, a pretend hospital cafeteria with a menu, orders, stations, and staff.</p>
+    </section>
+    <section style="display:grid;gap:12px">
+      <h2 style="font-size:20px">Where should we start you?</h2>
+      <div class="choices">
+        <button class="choice" data-lv="new"><b>I'm brand new</b><span>Never written SQL. Start from zero with step-by-step lessons.</span></button>
+        <button class="choice" data-lv="some"><b>I know the basics</b><span>I can write SELECT and WHERE. Start me at sorting.</span></button>
+        <button class="choice" data-lv="brush"><b>I'm brushing up</b><span>Unlock everything and mix tickets from every unit.</span></button>
+      </div>
+    </section>
+    <section class="howto"><span class="label">How a shift works</span>${howSteps()}</section>`;
+  app.querySelectorAll(".choice").forEach(b => b.onclick = () => { setLevel(b.dataset.lv); renderHome(); });
+}
+
+function renderHome(){
+  stopTimer(); session = null;
+  if (!S.level) { renderWelcome(); return; }
+  const doneToday = S.lastDay === today();
+  const cu = currentUnit();
+  const all = totalDone() === ALL.length;
+  const units = UNITS.map((u, ui) => {
+    const c = unitCount(ui), n = u.lessons.length, unlocked = unitUnlocked(ui);
+    const cls = c === n ? "complete" : (unlocked && ui === cu && !S.openAll ? "current" : (unlocked ? "" : "locked"));
+    return `<button class="unit ${cls}" data-unit="${ui}" ${unlocked?"":'aria-disabled="true"'}>
+      <span class="num">${c===n ? "✓" : String(ui+1).padStart(2,"0")}</span>
+      <span><div class="name">${esc(u.name)}</div><div class="sub">${unlocked ? esc(u.blurb) : "Finish " + esc(UNITS[ui-1].name) + " to unlock"}</div></span>
+      <span class="meta">${c}/${n}<span class="bar"><i style="width:${c/n*100}%"></i></span></span>
+    </button>`;
+  }).join("");
+  const shiftText = doneToday ? "Come back tomorrow to keep your streak. You can still practice any unlocked unit below."
+    : S.openAll ? "Five tickets mixed from every unit, plus a review of something you've solved."
+    : all ? "A mix of everything you've learned."
+    : (!S.seen[UNITS[cu].id] ? "Starts with a 1-minute lesson on <b>" + esc(UNITS[cu].name) + "</b>, then tickets to practice it." : "Tickets from <b>" + esc(UNITS[cu].name) + "</b> plus a quick review.");
+  app.innerHTML = header() + `
+    <section class="shift">
+      <span class="label" style="color:inherit;opacity:.8;position:relative">Today · ${new Date().toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"})}</span>
+      <h2>${doneToday ? "Shift complete. Nice work." : "Today's 5-minute shift"}</h2>
+      <p>${shiftText}</p>
+      <div class="row">
+        ${doneToday ? '<button class="btn invert" id="start">Run another shift</button>' : '<button class="btn invert" id="start">' + I.play + ' Start shift</button>'}
+      </div>
+    </section>
+    <section style="display:grid;gap:12px">
+      <div class="section-head"><h2>Your track</h2><span class="label">${totalDone()} of ${ALL.length} tickets solved</span></div>
+      <p class="sub-note">Tap any unlocked unit to practice it on its own.</p>
+      <div class="units">${units}</div>
+    </section>
+    <div class="foot"><span>Level: <b style="color:var(--ink)">${LEVELS[S.level]}</b> · <button class="linkbtn" id="change">Change</button></span><span style="display:flex;gap:14px"><button class="linkbtn" id="how">How to play</button><button class="linkbtn" id="reset">Reset progress</button></span></div>
+    <div class="foot" style="margin-top:-12px"><span>Progress is saved in this browser on this device.</span></div>`;
+  $("#start").onclick = () => startSession(buildDaily(), "daily");
+  app.querySelectorAll(".unit").forEach(b => b.onclick = () => {
+    const ui = +b.dataset.unit; if (!unitUnlocked(ui)) return; startSession(buildPractice(ui), "practice", ui);
+  });
+  $("#reset").onclick = confirmReset;
+  $("#change").onclick = renderWelcome;
+  $("#how").onclick = renderWelcome;
+}
+
+function confirmReset(){
+  const foot = $(".foot");
+  foot.innerHTML = `<span>Erase streak, XP, and all solved tickets?</span><span style="display:flex;gap:12px"><button class="linkbtn" id="no">Keep my progress</button><button class="linkbtn" id="yes" style="color:var(--bad)">Erase everything</button></span>`;
+  $("#no").onclick = renderHome;
+  $("#yes").onclick = () => { S = fresh(); save(); renderWelcome(); };
+}
+
+function startSession(cards, mode, ui){
+  if (!cards.length) return;
+  const out = [], introduced = {};
+  for (const c of cards) {
+    const uid = UNITS[c.l.unit].id;
+    if (!c.review && !S.seen[uid] && !introduced[uid]) { out.push({ intro:true, ui:c.l.unit, status:"open" }); introduced[uid] = true; }
+    out.push({ ...c, status:"open", tries:0, hint:false, shown:false, expect:false, sql:c.l.starter || "", xp:0 });
+  }
+  session = { mode, ui, cards: out, i:0, left:SESSION_SECONDS, xp:0, schema:false, guide:false };
+  startTimer();
+  renderCard();
+}
+function startTimer(){
+  stopTimer();
+  timerId = setInterval(() => { if (!session) return; session.left = Math.max(0, session.left-1); const t=$("#timer"); if (t){ t.textContent = fmt(session.left); t.classList.toggle("low", session.left<=60); } }, 1000);
+}
+function stopTimer(){ if (timerId) clearInterval(timerId); timerId = null; }
+const fmt = s => Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+
+const CHIPS = ["SELECT","*","FROM","WHERE","AND","OR","=","<",">","'","ORDER BY","DESC","LIMIT","COUNT(*)","SUM(","AVG(","GROUP BY","HAVING","JOIN","ON","AS","LIKE '%","IN (","CASE WHEN"," THEN "," ELSE "," END"];
+
+function playhead(){
+  const dots = session.cards.map((x, k) => `<i class="${x.intro?"lesson ":""}${x.status==="ok"?"ok":x.status==="skip"?"skip":k===session.i?"on":""}"></i>`).join("");
+  const tix = session.cards.filter(c=>!c.intro).length;
+  return `<div class="playhead">
+      <button class="iconbtn" id="quit" aria-label="Leave shift">${I.close}</button>
+      <div class="dots" aria-label="Step ${session.i+1} of ${session.cards.length}, ${tix} tickets">${dots}</div>
+      <span class="timer ${session.left<=60?"low":""}" id="timer" aria-label="Time left">${fmt(session.left)}</span>
+      <button class="iconbtn" id="tables" aria-label="Show tables" aria-pressed="${session.schema}">${I.grid}</button>
+    </div>
+    <div id="schemaSlot"></div>`;
+}
+function wirePlayhead(){
+  $("#quit").onclick = () => finishSession(true);
+  $("#tables").onclick = () => { session.schema = !session.schema; drawSchema(); $("#tables").setAttribute("aria-pressed", session.schema); };
+  drawSchema();
+}
+
+function guideHtml(ui){
+  const g = GUIDES[UNITS[ui].id];
+  return `
+    <div class="excel"><span class="label">If you know Excel</span><p>${g.excel}</p></div>
+    <p class="explain">${g.explain}</p>
+    <div class="example">
+      <span class="label">Example, piece by piece</span>
+      <code class="bigcode">${esc(g.example)}</code>
+      <dl class="parts">${g.parts.map(p=>`<div><dt><code>${esc(p[0])}</code></dt><dd>${esc(p[1])}</dd></div>`).join("")}</dl>
+    </div>`;
+}
+
+function renderIntro(){
+  const c = session.cards[session.i], u = UNITS[c.ui], last = session.i === session.cards.length - 1;
+  const g = GUIDES[u.id];
+  app.innerHTML = playhead() + `
+    <article class="ticket pop">
+      <div class="ticket-top"><span class="mono">LESSON · ${esc(u.name.toUpperCase())}</span><span class="tag lesson">1-minute lesson</span></div>
+      <div class="ticket-body">
+        <h3>${esc(u.name)}</h3>
+        ${c.ui === 0 ? `<p class="explain">A database stores information in <b>tables</b>. This one has four: <code>stations</code>, <code>menu_items</code>, <code>orders</code>, and <code>staff</code>. Here's the smallest one, <code>stations</code>:</p>${previewTable("stations", 5)}` : ""}
+        ${guideHtml(c.ui)}
+        <div class="actions"><button class="btn ghost" id="tryex">${I.play} Run this example</button></div>
+        <div id="resSlot"></div>
+        ${S.level === "new" && c.ui === 0 ? `<div class="howto inset"><span class="label">How each ticket works</span>${howSteps()}</div>` : ""}
+        <div class="actions"><button class="btn primary" id="gotit">${last ? "Finish" : "Got it, start the tickets →"}</button></div>
+      </div>
+    </article>`;
+  wirePlayhead();
+  $("#tryex").onclick = () => { const r = runSql(g.example); if (r.rows) showRows(r.rows, "Example result"); };
+  $("#gotit").onclick = () => { c.status = "ok"; S.seen[u.id] = true; save(); next(); };
+}
+
+function previewTable(t, n){
+  const d = SCHEMA[t], cols = d.cols.map(c=>c.split(" ")[0]);
+  const rows = d.rows.slice(0, n);
+  return `<div class="result preview"><div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>
+    ${rows.map(r=>"<tr>"+r.map(v=>`<td class="${typeof v==="number"?"num":""}">${esc(v)}</td>`).join("")+"</tr>").join("")}</tbody></table></div>
+    ${d.rows.length > n ? `<div class="morerows">+ ${d.rows.length - n} more rows</div>` : ""}</div>`;
+}
+
+function renderCard(){
+  const c = session.cards[session.i];
+  if (c.intro) { renderIntro(); return; }
+  const l = c.l, u = UNITS[l.unit];
+  const beginner = S.level === "new";
+  const tnum = session.cards.slice(0, session.i+1).filter(x=>!x.intro).length;
+  app.innerHTML = playhead() + `
+    <article class="ticket pop">
+      <div class="ticket-top">
+        <span class="mono">TICKET #${String(tnum).padStart(2,"0")} · ${esc(u.name.toUpperCase())}</span>
+        <span style="display:flex;gap:8px;align-items:center"><span class="tag ${c.review?"review":""}">${c.review ? "Review" : "New"}</span></span>
+      </div>
+      <div class="ticket-body">
+        <div class="titlerow"><h3>${esc(l.t)}</h3><button class="btn soft small" id="lesson" aria-expanded="${session.guide}">${I.book} Lesson</button></div>
+        <div id="guideSlot"></div>
+        <p class="prompt">${l.p}</p>
+        ${l.table ? `<details class="peek" ${beginner || l.unit === 0 ? "open" : ""}><summary>The <code>${l.table}</code> table <span>(first rows)</span></summary>${previewTable(l.table, 4)}</details>` : ""}
+        <div id="hintSlot"></div>
+        <div class="editor">
+          <label class="label" for="sql" style="display:block;margin-bottom:8px">Your query</label>
+          <textarea id="sql" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Type your query here, starting with SELECT">${esc(c.sql)}</textarea>
+        </div>
+        <div class="chips" role="toolbar" aria-label="Insert keyword">${CHIPS.map(k=>`<button class="chip" data-k="${esc(k)}">${esc(k.trim())}</button>`).join("")}</div>
+        <div class="actions" id="actions"></div>
+        <div id="fbSlot"></div>
+        <div id="resSlot"></div>
+        <div id="expSlot"></div>
+      </div>
+    </article>`;
+  wirePlayhead();
+  const ta = $("#sql");
+  ta.oninput = () => { c.sql = ta.value; };
+  ta.onkeydown = e => { if ((e.metaKey||e.ctrlKey) && e.key === "Enter") { e.preventDefault(); check(); } };
+  app.querySelectorAll(".chip").forEach(b => b.onclick = () => insert(ta, b.dataset.k));
+  $("#lesson").onclick = () => { session.guide = !session.guide; drawGuide(); };
+  drawGuide(); drawHint(); drawActions(); drawExpected();
+  if (c.status === "ok") { feedback("ok", "Solved.", "+" + c.xp + " XP"); }
+  if (window.matchMedia("(min-width: 700px)").matches) { ta.focus(); const b = ta.value.indexOf("___"); if (b >= 0) ta.setSelectionRange(b, b+3); }
+}
+
+function drawGuide(){
+  const c = session.cards[session.i], slot = $("#guideSlot"), btn = $("#lesson");
+  if (btn) btn.setAttribute("aria-expanded", session.guide);
+  slot.innerHTML = session.guide ? `<div class="guidebox pop">${guideHtml(c.l.unit)}</div>` : "";
+}
+
+function insert(ta, k){
+  let s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? s;
+  // tapping a keyword while a ___ blank is selected or next to the cursor fills that blank
+  if (s === e) { const b = ta.value.indexOf("___"); if (b >= 0) { s = b; e = b + 3; } }
+  const before = ta.value.slice(0, s), after = ta.value.slice(e);
+  const needsSpace = before && !/[\s(]$/.test(before) && !/^[ ,')]/.test(k) && k !== "'";
+  let txt = (needsSpace ? " " : "") + k + (/[\w*]$/.test(k) && !/^\s/.test(after) ? " " : "");
+  ta.value = before + txt + after;
+  const pos = (before + txt).length;
+  ta.focus(); ta.setSelectionRange(pos, pos);
+  session.cards[session.i].sql = ta.value;
+}
+
+function drawSchema(){
+  const slot = $("#schemaSlot");
+  if (!session.schema) { slot.innerHTML = ""; return; }
+  slot.innerHTML = `<div class="drawer pop"><div class="section-head"><h2 style="font-size:17px">Brookside Kitchen tables</h2><span class="label">tap ⊞ to hide</span></div>
+    <div class="schema">${Object.entries(SCHEMA).map(([t,d]) => `<div class="tbl"><h4>${t}</h4><ul>${d.cols.map(c => { const [n,ty]=c.split(" "); return `<li>${n} <span>${ty==="STRING"?"text":ty==="INT"?"whole number":"number"}</span></li>`; }).join("")}</ul></div>`).join("")}</div>
+    <span style="font-size:13px;color:var(--muted)">Peek at any table: type <code class="mono">SELECT * FROM</code> and the table name, then press Run.</span></div>`;
+}
+
+function drawHint(){
+  const c = session.cards[session.i], slot = $("#hintSlot");
+  let h = "";
+  if (c.hint) h += `<div class="hint pop"><b>Hint:</b> ${esc(c.l.h)}</div>`;
+  if (c.shown) h += `<div class="answer pop"><span class="label" style="display:block;margin-bottom:6px">One correct answer</span>${esc(c.l.s)}<div class="answer-actions"><button class="btn soft small" id="useans">Put it in the box</button></div></div>`;
+  slot.innerHTML = h;
+  const ua = $("#useans"); if (ua) ua.onclick = () => { const ta=$("#sql"); ta.value = c.l.s; c.sql = c.l.s; ta.focus(); };
+}
+
+function drawExpected(){
+  const c = session.cards[session.i], slot = $("#expSlot");
+  if (!c.expect || c.status === "ok") { slot.innerHTML = ""; return; }
+  const sol = makeDb().exec(c.l.s);
+  slot.innerHTML = "";
+  const tmp = document.createElement("div"); slot.appendChild(tmp);
+  tmp.innerHTML = rowsTable(sol, "Expected result");
+}
+
+function drawActions(){
+  const c = session.cards[session.i], a = $("#actions");
+  const last = session.i === session.cards.length - 1;
+  if (c.status === "ok") {
+    a.innerHTML = `<button class="btn primary" id="next">${last ? "Finish shift" : "Next ticket →"}</button><span class="spacer"></span><button class="btn ghost" id="run">Run</button>`;
+    $("#next").onclick = next;
+  } else {
+    const canShow = c.tries >= 2 || (S.level === "new" && c.tries >= 1);
+    a.innerHTML = `<button class="btn primary" id="check">${I.check} Check</button><button class="btn ghost" id="run">${I.play} Run</button>
+      <span class="spacer"></span>
+      ${!c.hint ? '<button class="btn soft" id="hint">Hint</button>' : ""}
+      ${c.tries >= 1 ? `<button class="btn soft" id="expect">${c.expect ? "Hide expected" : "See expected result"}</button>` : ""}
+      ${canShow && !c.shown ? '<button class="btn soft" id="show">Show answer</button>' : ""}
+      <button class="btn ghost" id="skip">Skip</button>`;
+    $("#check").onclick = check;
+    const h = $("#hint"); if (h) h.onclick = () => { c.hint = true; drawHint(); drawActions(); };
+    const sh = $("#show"); if (sh) sh.onclick = () => { c.shown = true; drawHint(); drawActions(); };
+    const ex = $("#expect"); if (ex) ex.onclick = () => { c.expect = !c.expect; drawExpected(); drawActions(); };
+    $("#skip").onclick = () => { c.status = "skip"; next(); };
+  }
+  $("#run").onclick = run;
+}
+
+function feedback(kind, title, sub){
+  $("#fbSlot").innerHTML = `<div class="feedback ${kind} pop" role="status"><div>${esc(title)}${sub ? "<small>" + esc(sub) + "</small>" : ""}</div></div>`;
+}
+function rowsTable(rows, label){
+  if (!rows.length) return `<div class="result"><div class="result-head"><span class="label">${label}</span><span class="label">0 rows</span></div><div class="empty">No rows came back.</div></div>`;
+  const cols = Object.keys(rows[0]);
+  const body = rows.slice(0, 50).map(r => "<tr>" + cols.map(k => { const v=r[k]; const isN = typeof v === "number"; return `<td class="${isN?"num":""}">${v===null||v===undefined?'<span style="color:var(--muted)">NULL</span>':esc(isN?(Math.round(v*100)/100):v)}</td>`; }).join("") + "</tr>").join("");
+  return `<div class="result"><div class="result-head"><span class="label">${label}</span><span class="label">${rows.length} row${rows.length===1?"":"s"}</span></div>
+    <div class="tablewrap"><table><thead><tr>${cols.map(k=>`<th>${esc(k)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+}
+function showRows(rows, label){ $("#resSlot").innerHTML = rowsTable(rows, label); }
+
+function run(){
+  const c = session.cards[session.i]; c.sql = $("#sql").value;
+  const r = runSql(c.sql);
+  if (r.error) { feedback("bad", r.error, r.tip); $("#resSlot").innerHTML = ""; return; }
+  if (c.status !== "ok") $("#fbSlot").innerHTML = "";
+  showRows(r.rows, "Result");
+}
+
+function check(){
+  const c = session.cards[session.i]; c.sql = $("#sql").value;
+  const r = runSql(c.sql);
+  if (r.error) { feedback("bad", r.error, r.tip); $("#resSlot").innerHTML = ""; return; }
+  showRows(r.rows, "Your result");
+  const sol = makeDb().exec(c.l.s);
+  const verdict = sameResult(r.rows, sol, !!c.l.ordered);
+  if (verdict.ok) {
+    c.status = "ok";
+    c.xp = c.shown ? 2 : (c.review ? 5 : (c.tries === 0 && !c.hint ? 10 : 6));
+    session.xp += c.xp; S.xp += c.xp;
+    S.done[c.l.key] = true; save();
+    const praise = ["Order up!", "Clean query.", "Exactly right.", "That's the one.", "Nailed it."][Math.floor(Math.random()*5)];
+    feedback("ok", praise, "+" + c.xp + " XP");
+    drawActions(); drawExpected();
+    const n = $("#next"); if (n) n.focus();
+  } else {
+    c.tries++;
+    if (S.level === "new" && !c.hint) { c.hint = true; drawHint(); }
+    feedback("bad", "Not yet.", verdict.why + " Compare with the expected result to see what's different.");
+    drawActions();
+  }
+}
+
+function next(){
+  if (session.i < session.cards.length - 1) { session.i++; session.guide = false; renderCard(); window.scrollTo({ top:0 }); }
+  else finishSession(false);
+}
+
+function finishSession(quit){
+  stopTimer();
+  const tickets = session.cards.filter(c => !c.intro);
+  const solved = tickets.filter(c => c.status === "ok").length;
+  const isDaily = session.mode === "daily";
+  let streakMsg = "";
+  if (solved > 0 && S.lastDay !== today()) {
+    S.streak = (S.lastDay === yesterday()) ? S.streak + 1 : 1;
+    S.best = Math.max(S.best || 0, S.streak);
+    S.lastDay = today();
+    streakMsg = S.streak === 1 ? "Streak started." : S.streak + "-day streak!";
+  }
+  S.sessions++; save();
+  if (quit && solved === 0) { renderHome(); return; }
+  const used = SESSION_SECONDS - session.left;
+  const list = tickets.map(c => `<li><i style="background:${c.status==="ok"?"var(--good)":c.status==="skip"?"var(--warm)":"var(--line)"}"></i>${esc(c.l.t)} <span style="color:var(--muted);font-size:13px">· ${c.status==="ok" ? "+" + c.xp + " XP" : c.status==="skip" ? "skipped" : "not tried"}</span></li>`).join("");
+  const nextUnit = currentUnit();
+  app.innerHTML = header() + `
+    <section class="summary pop">
+      <span class="label">${isDaily ? "Shift report" : "Practice report"}</span>
+      <h2>${solved === tickets.length ? "Perfect shift." : solved >= 3 ? "Solid shift." : "Every query counts."}</h2>
+      <div class="tally">
+        <div><b>${solved}/${tickets.length}</b><span>tickets solved</span></div>
+        <div><b>+${session.xp}</b><span>XP earned</span></div>
+        <div><b>${fmt(used)}</b><span>on the clock</span></div>
+      </div>
+      ${streakMsg ? `<div class="feedback ok"><div>${esc(streakMsg)}<small>Come back tomorrow to keep it going.</small></div></div>` : ""}
+      <ul class="reslist">${list}</ul>
+      <div class="foot" style="font-size:14px"><span>Up next: <b style="color:var(--ink)">${esc(UNITS[nextUnit].name)}</b> · ${unitCount(nextUnit)}/${UNITS[nextUnit].lessons.length} done</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="home">Back to track</button></div>
+    </section>`;
+  $("#home").onclick = renderHome;
+  session = null;
+}
+
+renderHome();
+})();
+
+</script>
+
+<p class="site-foot">Built by <a href="../">Akil Craigg-Williams</a>. Progress is saved in your browser only.</p>
+</body>
+</html>
