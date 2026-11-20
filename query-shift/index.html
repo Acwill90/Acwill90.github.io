@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Query Shift is a free 5-minute daily SQL game for complete beginners through experienced analysts, built by Akil Craigg-Williams.">
 <meta property="og:title" content="Query Shift">
-<meta property="og:description" content="Learn SQL five minutes a day with short lessons and real queries against a sample hospital cafeteria database.">
+<meta property="og:description" content="Learn SQL five minutes a day with short lessons and real queries against a sample hospital cafeteria database, plus a bonus BigQuery unit on blockchain data.">
 <title>Query Shift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -171,7 +171,7 @@ tr:last-child td{border-bottom:0}
 .steps b{color:var(--ink)}
 .stepnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:700 13px var(--f-mono)}
 .sub-note{margin:-6px 0 0;font-size:14px;color:var(--muted)}
-.bigcode{display:block;font:600 16px/1.5 var(--f-mono);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;overflow-x:auto;white-space:pre-wrap;color:var(--ink)}
+.bigcode{display:block;font:600 16px/1.5 var(--f-mono);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
 .prompt .bigcode{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 .excel{background:var(--good-soft);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
 .excel .label{color:var(--good)}
@@ -197,6 +197,15 @@ tr:last-child td{border-bottom:0}
 .morerows{padding:6px 12px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
 .answer-actions{margin-top:8px}
 #expSlot .result{border-style:dashed}
+.about{background:var(--accent-soft);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.about .label{color:var(--accent)}
+.about p{margin:0;max-width:62ch}
+.about code,.excel code{font-family:var(--f-mono);font-size:.9em;background:var(--surface);padding:1px 5px;border-radius:5px;word-break:break-word}
+.excel .bigcode{background:var(--surface);font-size:13px;font-weight:400}
+.excel a,.about a{color:inherit;font-weight:600}
+.howlist{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
+.fineprint{font-size:13px;color:var(--muted)}
+.unit .bonus{font:600 10px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:3px 6px;border-radius:5px;background:var(--warm-soft);color:var(--warm);margin-left:6px;vertical-align:2px}
 
 @media (max-width:480px){
   .ticket-body{padding:14px}
@@ -268,8 +277,41 @@ const SCHEMA = {
       [5, "Aisha Grant", "Cook", 4, 21.0, 2018], [6, "Leo Park", "Attendant", 2, 17.0, 2024],
       [7, "Nina Brooks", "Barista", 3, 19.25, 2020], [8, "Sam Cole", "Attendant", 5, 17.25, 2021]
     ]
+  },
+  // Bonus dataset: a small, simplified slice shaped like BigQuery's public Ethereum tables
+  blocks: { ds: "eth",
+    cols: ["block_number INT", "block_timestamp STRING", "transaction_count INT", "gas_used INT", "base_fee_gwei NUMBER"],
+    rows: [
+      [21000001, "2026-10-05 14:02:11", 3, 107000, 16], [21000002, "2026-10-05 14:02:23", 2, 141000, 15.5],
+      [21000003, "2026-10-06 09:15:47", 4, 153000, 20], [21000004, "2026-10-06 09:15:59", 2, 67000, 19],
+      [21000005, "2026-10-07 18:40:35", 3, 94000, 12], [21000006, "2026-10-07 18:40:47", 0, 0, 12]
+    ]
+  },
+  transactions: { ds: "eth",
+    cols: ["hash STRING", "block_number INT", "block_timestamp STRING", "from_address STRING", "to_address STRING", "value_eth NUMBER", "gas_used INT", "gas_price_gwei NUMBER"],
+    rows: [
+      ["0xe3a1", 21000001, "2026-10-05 14:02:11", "0x3f5ce1a9", "0xd1e0a6f2", 12.5, 21000, 18],
+      ["0xe3a2", 21000001, "2026-10-05 14:02:11", "0x8b2d47c0", "0x51a7b93e", 0.8, 21000, 18],
+      ["0xe3a3", 21000001, "2026-10-05 14:02:11", "0x3f5ce1a9", "0x9c04f8d6", 3.2, 65000, 19],
+      ["0xe3a4", 21000002, "2026-10-05 14:02:23", "0xd1e0a6f2", "0x3f5ce1a9", 25, 21000, 17],
+      ["0xe3a5", 21000002, "2026-10-05 14:02:23", "0x3f5ce1a9", "0x26be5d71", 0.15, 120000, 17],
+      ["0xe3a6", 21000003, "2026-10-06 09:15:47", "0x51a7b93e", "0x8b2d47c0", 1.9, 21000, 22],
+      ["0xe3a7", 21000003, "2026-10-06 09:15:47", "0x8b2d47c0", "0x3f5ce1a9", 48, 21000, 23],
+      ["0xe3a8", 21000003, "2026-10-06 09:15:47", "0x9c04f8d6", "0xd1e0a6f2", 0.05, 90000, 22],
+      ["0xe3a9", 21000003, "2026-10-06 09:15:47", "0x3f5ce1a9", "0x51a7b93e", 7.75, 21000, 24],
+      ["0xe3b0", 21000004, "2026-10-06 09:15:59", "0x26be5d71", "0x3f5ce1a9", 0.3, 46000, 21],
+      ["0xe3b1", 21000004, "2026-10-06 09:15:59", "0xd1e0a6f2", "0x8b2d47c0", 15.2, 21000, 21],
+      ["0xe3b2", 21000005, "2026-10-07 18:40:35", "0x3f5ce1a9", "0x8b2d47c0", 2.6, 21000, 14],
+      ["0xe3b3", 21000005, "2026-10-07 18:40:35", "0x8b2d47c0", "0x9c04f8d6", 11, 52000, 14],
+      ["0xe3b4", 21000005, "2026-10-07 18:40:35", "0x8b2d47c0", "0x26be5d71", 0.4, 21000, 15]
+    ]
   }
 };
+const DATASETS = {
+  kitchen: { title: "Brookside Kitchen tables" },
+  eth: { title: "crypto_ethereum tables (simplified)" }
+};
+const BQT = "`bigquery-public-data.crypto_ethereum.";
 
 const UNITS = [
   { id: "select", name: "SELECT basics", blurb: "Pull columns out of a table." , lessons: [
@@ -323,6 +365,42 @@ const UNITS = [
     { t: "Label it", p: "Show each item's <b>name</b> and a column <b>tier</b>: 'Budget' if price is under 5, otherwise 'Standard'.", h: "CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier", s: "SELECT name, CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier FROM menu_items" },
     { t: "Drink orders", p: "Show all orders (all columns) for items in the <b>Drink</b> category, using a subquery instead of a JOIN.", h: "WHERE item_id IN (SELECT item_id FROM menu_items WHERE ...)", s: "SELECT * FROM orders WHERE item_id IN (SELECT item_id FROM menu_items WHERE category = 'Drink')" },
     { t: "Count by tier", p: "Count how many staff are 'Senior' (hired before 2020) vs 'Newer'. Show <b>tier</b> and <b>n</b>.", h: "GROUP BY the same CASE expression you SELECT.", s: "SELECT CASE WHEN hire_year < 2020 THEN 'Senior' ELSE 'Newer' END AS tier, COUNT(*) AS n FROM staff GROUP BY CASE WHEN hire_year < 2020 THEN 'Senior' ELSE 'Newer' END" }
+  ]},
+  { id: "bq", name: "BigQuery & blockchain data", blurb: "Bonus: query Ethereum-style data the way analysts do in BigQuery.", bonus: true, dataset: "eth",
+    chips: ["`bigquery-public-data.crypto_ethereum.transactions`", "`bigquery-public-data.crypto_ethereum.blocks`", "DATE(", "SAFE_DIVIDE("],
+    lessons: [
+    { t: "A BigQuery table name", table: "blocks", starter: "SELECT * FROM " + BQT + "blocks`",
+      p: "In BigQuery, every table has a three-part address: <b>project.dataset.table</b>, wrapped in backticks (<b>`</b>). The query below is already written. Read it, then press <b>Check</b>.",
+      h: "Leave the query as it is. bigquery-public-data is the project, crypto_ethereum is the dataset, and blocks is the table.",
+      s: "SELECT * FROM " + BQT + "blocks`" },
+    { t: "Only the columns you need", table: "blocks", starter: "SELECT ___, ___ FROM " + BQT + "blocks`",
+      p: "BigQuery charges by how much data a query reads, and it reads only the columns you name. Show just <b>block_number</b> and <b>transaction_count</b>.",
+      h: "Replace the blanks: SELECT block_number, transaction_count FROM ...blocks`",
+      s: "SELECT block_number, transaction_count FROM " + BQT + "blocks`" },
+    { t: "Big transfers", table: "transactions", starter: "SELECT hash, value_eth FROM " + BQT + "transactions` WHERE ___",
+      p: "Each row in <b>transactions</b> is one transfer on the blockchain, and <b>hash</b> is its unique ID. Show the <b>hash</b> and <b>value_eth</b> of every transfer worth more than 10 ETH.",
+      h: "Finish the WHERE: value_eth > 10",
+      s: "SELECT hash, value_eth FROM " + BQT + "transactions` WHERE value_eth > 10" },
+    { t: "What did each transfer cost?", table: "transactions", starter: "SELECT hash, ___ AS fee_eth FROM " + BQT + "transactions`",
+      p: "Every transfer pays a fee called <b>gas</b>. The fee in ETH is <b>gas_used × gas_price_gwei ÷ 1,000,000,000</b> (a gwei is one billionth of an ETH). Show each <b>hash</b> and its fee labeled <b>fee_eth</b>.",
+      h: "gas_used * gas_price_gwei / 1000000000 AS fee_eth",
+      s: "SELECT hash, gas_used * gas_price_gwei / 1000000000 AS fee_eth FROM " + BQT + "transactions`" },
+    { t: "Daily activity", table: "transactions",
+      p: "<b>block_timestamp</b> holds a date and a time. BigQuery's <b>DATE()</b> keeps just the date. Show each <b>day</b> and its number of transactions labeled <b>tx_count</b>, oldest day first.",
+      h: "SELECT DATE(block_timestamp) AS day, COUNT(*) AS tx_count FROM ...transactions` GROUP BY day ORDER BY day",
+      s: "SELECT DATE(block_timestamp) AS day, COUNT(*) AS tx_count FROM " + BQT + "transactions` GROUP BY day ORDER BY day", ordered: true },
+    { t: "Most active wallets", table: "transactions",
+      p: "A wallet is identified by its address. Show the 3 <b>from_address</b> values that sent the most transactions, with the count labeled <b>tx_count</b>, busiest first.",
+      h: "GROUP BY from_address, ORDER BY tx_count DESC, then LIMIT 3",
+      s: "SELECT from_address, COUNT(*) AS tx_count FROM " + BQT + "transactions` GROUP BY from_address ORDER BY tx_count DESC LIMIT 3", ordered: true },
+    { t: "Divide safely", table: "blocks",
+      p: "Show each <b>block_number</b> and its average gas per transaction labeled <b>avg_gas</b>. One block is empty, and dividing by zero makes BigQuery stop with an error. <b>SAFE_DIVIDE(a, b)</b> returns NULL instead.",
+      h: "SAFE_DIVIDE(gas_used, transaction_count) AS avg_gas",
+      s: "SELECT block_number, SAFE_DIVIDE(gas_used, transaction_count) AS avg_gas FROM " + BQT + "blocks`" },
+    { t: "Blocks meet transactions",
+      p: "Show the <b>hash</b> and <b>value_eth</b> of transfers over 20 ETH, plus the <b>base_fee_gwei</b> of the block each one landed in. Join the two tables on <b>block_number</b>.",
+      h: "FROM ...transactions` t JOIN ...blocks` b ON t.block_number = b.block_number WHERE t.value_eth > 20",
+      s: "SELECT t.hash, t.value_eth, b.base_fee_gwei FROM " + BQT + "transactions` t JOIN " + BQT + "blocks` b ON t.block_number = b.block_number WHERE t.value_eth > 20" }
   ]}
 ];
 
@@ -368,8 +446,85 @@ const GUIDES = {
     explain: "<b>CASE WHEN</b> creates a new column from a rule: <code>CASE WHEN test THEN 'A' ELSE 'B' END</code>. A <b>subquery</b> is a query inside parentheses whose answer feeds the outer query.",
     example: "SELECT name, CASE WHEN price < 5 THEN 'Budget' ELSE 'Standard' END AS tier FROM menu_items",
     parts: [["CASE WHEN price < 5", "If the price is under 5…"], ["THEN 'Budget'", "…write Budget"], ["ELSE 'Standard' END", "otherwise write Standard"], ["AS tier", "and name that column tier"]]
+  },
+  bq: {
+    about: `
+      <div class="about">
+        <span class="label">What is BigQuery?</span>
+        <p><b>BigQuery</b> is Google Cloud's <b>data warehouse</b>: a service that stores huge tables, often billions of rows, and answers SQL questions about them in seconds. You type SQL in a browser and Google's servers do the work. There is nothing to install and no server to manage, which is why it's called <b>serverless</b>.</p>
+        <span class="label">How it works</span>
+        <ol class="howlist">
+          <li><b>Tables live in projects and datasets.</b> A full table name has three parts: <code>project.dataset.table</code>. In <code>bigquery-public-data.crypto_ethereum.transactions</code>, the project is <code>bigquery-public-data</code>, the dataset is <code>crypto_ethereum</code>, and the table is <code>transactions</code>. Backticks (<code>\`</code>) wrap the name because of the dashes.</li>
+          <li><b>Data is stored by column.</b> Each column is saved separately, so a query reads only the columns you name.</li>
+          <li><b>You pay for what you read.</b> Cost depends on how much data a query scans. <code>SELECT *</code> scans every column. <code>LIMIT</code> trims the results but does not reduce the scan, so name your columns and filter by date instead.</li>
+          <li><b>Thousands of machines share the work.</b> BigQuery splits a big query into pieces, runs them in parallel, and combines the answers.</li>
+          <li><b>The SQL is almost the same.</b> BigQuery's dialect is called <b>GoogleSQL</b>. SELECT, WHERE, GROUP BY, and JOIN work as you've learned, plus extras like <code>DATE()</code> and <code>SAFE_DIVIDE()</code>.</li>
+        </ol>
+        <span class="label">Why blockchain data?</span>
+        <p>Google publishes the Bitcoin and Ethereum blockchains as free public datasets in BigQuery. A blockchain is a shared record of every transfer, grouped into <b>blocks</b>. Analysts at crypto and finance companies query this <b>on-chain data</b> to track activity, fees, and wallets. This unit uses a small, simplified copy so you can practice here.</p>
+        <p class="fineprint">Simplified for practice: the real tables store amounts in wei (1 ETH = 10<sup>18</sup> wei), and some columns have different names, such as <code>number</code> instead of <code>block_number</code> in blocks.</p>
+      </div>`,
+    tryReal: `
+      <div class="excel">
+        <span class="label">Try the real thing for free</span>
+        <p>Open the <a href="https://console.cloud.google.com/bigquery" target="_blank" rel="noopener">BigQuery sandbox</a> with a Google account. It needs no credit card and includes 1 TB of queries and 10 GB of storage each month. Paste this to count Ethereum transactions per day for the last week:</p>
+        <code class="bigcode">SELECT DATE(block_timestamp) AS day, COUNT(*) AS tx_count
+FROM \`bigquery-public-data.crypto_ethereum.transactions\`
+WHERE DATE(block_timestamp) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+GROUP BY day
+ORDER BY day</code>
+        <p>The date filter matters: a blockchain table is huge, and scanning all of it can use up a big share of your free monthly quota.</p>
+      </div>`,
+    excel: "If Excel is one workbook on your laptop, BigQuery is a warehouse of tables too big for any laptop. You send it a question in SQL, and it sends back only the answer table.",
+    explain: "Everything you've learned still works. The new parts: three-part table names in backticks, <code>DATE()</code> to turn a timestamp into a date, and <code>SAFE_DIVIDE(a, b)</code>, which returns NULL instead of an error when b is zero.",
+    example: "SELECT DATE(block_timestamp) AS day, COUNT(*) AS tx_count FROM `bigquery-public-data.crypto_ethereum.transactions` GROUP BY day",
+    parts: [["DATE(block_timestamp) AS day", "Keep just the date part of each timestamp, called day"], ["COUNT(*) AS tx_count", "count the transactions"], ["FROM `bigquery-public-data.crypto_ethereum.transactions`", "from the transactions table in the crypto_ethereum dataset"], ["GROUP BY day", "one row per day"]]
   }
 };
+
+// ---------- BigQuery compatibility for the in-browser engine ----------
+// AlaSQL doesn't know GoogleSQL, so queries are lightly rewritten before they run.
+function splitTop(s){
+  const out = []; let depth = 0, q = null, cur = "";
+  for (const ch of s) {
+    if (q) { if (ch === q) q = null; cur += ch; continue; }
+    if (ch === "'" || ch === '"' || ch === "`") q = ch;
+    else if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (ch === "," && depth === 0) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function rewriteAliases(q){
+  // BigQuery lets GROUP BY / ORDER BY use a SELECT alias or a column number; AlaSQL needs the expression.
+  const m = q.match(/^\s*SELECT\s+(?:DISTINCT\s+)?([\s\S]+?)\s+FROM\s/i);
+  if (!m || /\(\s*SELECT/i.test(m[1])) return q;
+  const exprs = [], names = [], alias = {};
+  splitTop(m[1]).forEach(it => {
+    const t = it.trim(), a = t.match(/^([\s\S]+?)\s+AS\s+(\w+)$/i);
+    if (a) { exprs.push(a[1]); names.push(a[2]); alias[a[2].toLowerCase()] = a[1]; }
+    else { exprs.push(t); names.push(t); }
+  });
+  q = q.replace(/(\bGROUP\s+BY\s+)([\s\S]+?)(?=\s+(?:HAVING|ORDER\s+BY|LIMIT)\b|\s*$)/i, (all, kw, list) =>
+    kw + splitTop(list).map(x => { const t = x.trim();
+      if (/^\d+$/.test(t)) return exprs[+t - 1] || t;
+      const e = alias[t.toLowerCase()]; return e && e.toLowerCase() !== t.toLowerCase() ? e : t; }).join(", "));
+  q = q.replace(/(\bORDER\s+BY\s+)([\s\S]+?)(?=\s+LIMIT\b|\s*$)/i, (all, kw, list) =>
+    kw + splitTop(list).map(x => x.replace(/^\s*(\d+)\b/, (d, n) => names[+n - 1] || n).trim()).join(", "));
+  return q;
+}
+function prepSql(q){
+  q = q.replace(/`[\w-]+\.[\w-]+\.(\w+)`/g, "$1").replace(/`[\w-]+\.(\w+)`/g, "$1").replace(/`(\w+)`/g, "$1")
+       .replace(/\bbigquery-public-data\.\w+\.(\w+)/gi, "$1").replace(/\bcrypto_ethereum\.(\w+)/gi, "$1")
+       .replace(/\bsafe_divide\s*\(/gi, "SAFE_DIVIDE(").replace(/\bdate\s*\(/gi, "BQ_DATE(");
+  return rewriteAliases(q);
+}
+function registerBqFunctions(alasql){
+  alasql.fn.SAFE_DIVIDE = (a, b) => (a == null || b == null || b === 0) ? null : a / b;
+  alasql.fn.BQ_DATE = v => v == null ? null : String(v).slice(0, 10);
+}
 
 </script>
 <script>
@@ -377,6 +532,7 @@ const GUIDES = {
 "use strict";
 const $ = (s, el=document) => el.querySelector(s);
 const app = $("#app");
+registerBqFunctions(alasql);
 const SESSION_SIZE = 5, SESSION_SECONDS = 300;
 
 // ---------- flatten lessons ----------
@@ -400,7 +556,7 @@ function liveStreak(){ return (S.lastDay === today() || S.lastDay === yesterday(
 // ---------- progress ----------
 function unitDone(ui){ return UNITS[ui].lessons.every((_, li) => S.done[UNITS[ui].id+":"+li]); }
 function unitCount(ui){ return UNITS[ui].lessons.filter((_, li) => S.done[UNITS[ui].id+":"+li]).length; }
-function unitUnlocked(ui){ return S.openAll || ui <= S.startAt || unitDone(ui-1); }
+function unitUnlocked(ui){ return S.openAll || !!UNITS[ui].bonus || ui <= S.startAt || unitDone(ui-1); }
 function currentUnit(){
   for (let i=S.startAt;i<UNITS.length;i++) if (!unitDone(i)) return i;
   for (let i=0;i<UNITS.length;i++) if (!unitDone(i)) return i;
@@ -422,6 +578,7 @@ function shuffle(arr, rnd){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ 
 function buildDaily(){
   const rnd = seeded(today());
   let fresh = ALL.filter(l => !S.done[l.key] && unitUnlocked(l.unit) && (S.openAll || l.unit >= Math.min(S.startAt, currentUnit())));
+  { const cu0 = currentUnit(); fresh = fresh.filter(l => S.openAll || !UNITS[l.unit].bonus || l.unit === cu0); }
   if (S.openAll) fresh = shuffle(fresh, rnd);
   else { const cu = currentUnit(); fresh = fresh.filter(l => l.unit >= cu).concat(fresh.filter(l => l.unit < cu)); }
   const solved = shuffle(ALL.filter(l => S.done[l.key]), rnd);
@@ -454,7 +611,7 @@ function runSql(sql){
   if (q.includes(";")) return { error:"Run one query at a time.", tip:"Remove the extra semicolon." };
   if (!/^\s*(select|with)\b/i.test(q)) return { error:"Only SELECT queries run here.", tip:"Every challenge can be solved with SELECT." };
   try {
-    const rows = makeDb().exec(q);
+    const rows = makeDb().exec(prepSql(q));
     if (!Array.isArray(rows)) return { error:"That query didn't return a table.", tip:"Make sure it starts with SELECT." };
     return { rows };
   } catch(e) {
@@ -462,12 +619,13 @@ function runSql(sql){
     let tip = "Check spelling, commas between columns, and quotes around text.";
     const m = msg.match(/got '([A-Z_]+)'/);
     if (m && !["EOF","COMMA"].includes(m[1])) tip = "Something is off near “" + m[1].toLowerCase() + "”. If you used it as a column alias, some words (total, count, value, date) are reserved, so pick another name.";
-    if (/Table .*does not exist/i.test(msg)) tip = "That table name doesn't exist. Tap the grid icon at the top to see the four table names.";
+    if (/Table .*does not exist/i.test(msg)) tip = "That table name doesn't exist. Tap the grid icon at the top to see the table names.";
     if (/Column .*(does not exist|not found)/i.test(msg)) tip = "Check the column name against the Tables list.";
     const first = msg.split("\n")[0]; return { error: /^Parse error/i.test(first) ? "That query has a syntax error." : first.slice(0,140), tip };
   }
 }
-function canon(v){ if (typeof v === "number") return String(Math.round(v*100)/100); if (v === null || v === undefined) return "∅"; return String(v); }
+function fmtNum(v){ return (v !== 0 && Math.abs(v) < 1) ? Number(v.toPrecision(4)) : Math.round(v*100)/100; }
+function canon(v){ if (typeof v === "number") return String(fmtNum(v)); if (v === null || v === undefined) return "∅"; return String(v); }
 function rowKey(r){ return Object.values(r).map(canon).sort().join("\u0001"); }
 function sameResult(user, sol, ordered){
   if (user.length !== sol.length) return { ok:false, why:"Your result has " + user.length + " row" + (user.length===1?"":"s") + "; the answer has " + sol.length + "." };
@@ -550,7 +708,7 @@ function renderHome(){
     const cls = c === n ? "complete" : (unlocked && ui === cu && !S.openAll ? "current" : (unlocked ? "" : "locked"));
     return `<button class="unit ${cls}" data-unit="${ui}" ${unlocked?"":'aria-disabled="true"'}>
       <span class="num">${c===n ? "✓" : String(ui+1).padStart(2,"0")}</span>
-      <span><div class="name">${esc(u.name)}</div><div class="sub">${unlocked ? esc(u.blurb) : "Finish " + esc(UNITS[ui-1].name) + " to unlock"}</div></span>
+      <span><div class="name">${esc(u.name)}${u.bonus ? '<span class="bonus">Bonus</span>' : ""}</div><div class="sub">${unlocked ? esc(u.blurb) : "Finish " + esc(UNITS[ui-1].name) + " to unlock"}</div></span>
       <span class="meta">${c}/${n}<span class="bar"><i style="width:${c/n*100}%"></i></span></span>
     </button>`;
   }).join("");
@@ -628,16 +786,16 @@ function wirePlayhead(){
   drawSchema();
 }
 
-function guideHtml(ui){
+function guideHtml(ui, noAbout){
   const g = GUIDES[UNITS[ui].id];
-  return `
+  return `${noAbout ? "" : (g.about || "")}
     <div class="excel"><span class="label">If you know Excel</span><p>${g.excel}</p></div>
     <p class="explain">${g.explain}</p>
     <div class="example">
       <span class="label">Example, piece by piece</span>
       <code class="bigcode">${esc(g.example)}</code>
       <dl class="parts">${g.parts.map(p=>`<div><dt><code>${esc(p[0])}</code></dt><dd>${esc(p[1])}</dd></div>`).join("")}</dl>
-    </div>`;
+    </div>${g.tryReal || ""}`;
 }
 
 function renderIntro(){
@@ -649,7 +807,8 @@ function renderIntro(){
       <div class="ticket-body">
         <h3>${esc(u.name)}</h3>
         ${c.ui === 0 ? `<p class="explain">A database stores information in <b>tables</b>. This one has four: <code>stations</code>, <code>menu_items</code>, <code>orders</code>, and <code>staff</code>. Here's the smallest one, <code>stations</code>:</p>${previewTable("stations", 5)}` : ""}
-        ${guideHtml(c.ui)}
+        ${u.bonus ? `${g.about}<p class="explain">Here are the first rows of the <code>transactions</code> table you'll query:</p>${previewTable("transactions", 4)}` : ""}
+        ${guideHtml(c.ui, u.bonus)}
         <div class="actions"><button class="btn ghost" id="tryex">${I.play} Run this example</button></div>
         <div id="resSlot"></div>
         ${S.level === "new" && c.ui === 0 ? `<div class="howto inset"><span class="label">How each ticket works</span>${howSteps()}</div>` : ""}
@@ -691,7 +850,7 @@ function renderCard(){
           <label class="label" for="sql" style="display:block;margin-bottom:8px">Your query</label>
           <textarea id="sql" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Type your query here, starting with SELECT">${esc(c.sql)}</textarea>
         </div>
-        <div class="chips" role="toolbar" aria-label="Insert keyword">${CHIPS.map(k=>`<button class="chip" data-k="${esc(k)}">${esc(k.trim())}</button>`).join("")}</div>
+        <div class="chips" role="toolbar" aria-label="Insert keyword">${(u.chips || []).concat(CHIPS).map(k=>`<button class="chip" data-k="${esc(k)}">${esc(k.startsWith("`") ? k.replace(/^`bigquery-public-data\.crypto_ethereum\.(\w+)`$/, "…$1") : k.trim())}</button>`).join("")}</div>
         <div class="actions" id="actions"></div>
         <div id="fbSlot"></div>
         <div id="resSlot"></div>
@@ -731,8 +890,9 @@ function insert(ta, k){
 function drawSchema(){
   const slot = $("#schemaSlot");
   if (!session.schema) { slot.innerHTML = ""; return; }
-  slot.innerHTML = `<div class="drawer pop"><div class="section-head"><h2 style="font-size:17px">Brookside Kitchen tables</h2><span class="label">tap ⊞ to hide</span></div>
-    <div class="schema">${Object.entries(SCHEMA).map(([t,d]) => `<div class="tbl"><h4>${t}</h4><ul>${d.cols.map(c => { const [n,ty]=c.split(" "); return `<li>${n} <span>${ty==="STRING"?"text":ty==="INT"?"whole number":"number"}</span></li>`; }).join("")}</ul></div>`).join("")}</div>
+  const cur = session.cards[session.i], ds = UNITS[cur.intro ? cur.ui : cur.l.unit].dataset || "kitchen";
+  slot.innerHTML = `<div class="drawer pop"><div class="section-head"><h2 style="font-size:17px">${DATASETS[ds].title}</h2><span class="label">tap ⊞ to hide</span></div>
+    <div class="schema">${Object.entries(SCHEMA).filter(([t,d]) => (d.ds || "kitchen") === ds).map(([t,d]) => `<div class="tbl"><h4>${t}</h4><ul>${d.cols.map(c => { const [n,ty]=c.split(" "); return `<li>${n} <span>${ty==="STRING"?"text":ty==="INT"?"whole number":"number"}</span></li>`; }).join("")}</ul></div>`).join("")}</div>
     <span style="font-size:13px;color:var(--muted)">Peek at any table: type <code class="mono">SELECT * FROM</code> and the table name, then press Run.</span></div>`;
 }
 
@@ -748,7 +908,7 @@ function drawHint(){
 function drawExpected(){
   const c = session.cards[session.i], slot = $("#expSlot");
   if (!c.expect || c.status === "ok") { slot.innerHTML = ""; return; }
-  const sol = makeDb().exec(c.l.s);
+  const sol = makeDb().exec(prepSql(c.l.s));
   slot.innerHTML = "";
   const tmp = document.createElement("div"); slot.appendChild(tmp);
   tmp.innerHTML = rowsTable(sol, "Expected result");
@@ -783,7 +943,7 @@ function feedback(kind, title, sub){
 function rowsTable(rows, label){
   if (!rows.length) return `<div class="result"><div class="result-head"><span class="label">${label}</span><span class="label">0 rows</span></div><div class="empty">No rows came back.</div></div>`;
   const cols = Object.keys(rows[0]);
-  const body = rows.slice(0, 50).map(r => "<tr>" + cols.map(k => { const v=r[k]; const isN = typeof v === "number"; return `<td class="${isN?"num":""}">${v===null||v===undefined?'<span style="color:var(--muted)">NULL</span>':esc(isN?(Math.round(v*100)/100):v)}</td>`; }).join("") + "</tr>").join("");
+  const body = rows.slice(0, 50).map(r => "<tr>" + cols.map(k => { const v=r[k]; const isN = typeof v === "number"; return `<td class="${isN?"num":""}">${v===null||v===undefined?'<span style="color:var(--muted)">NULL</span>':esc(isN?fmtNum(v):v)}</td>`; }).join("") + "</tr>").join("");
   return `<div class="result"><div class="result-head"><span class="label">${label}</span><span class="label">${rows.length} row${rows.length===1?"":"s"}</span></div>
     <div class="tablewrap"><table><thead><tr>${cols.map(k=>`<th>${esc(k)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div></div>`;
 }
@@ -802,7 +962,7 @@ function check(){
   const r = runSql(c.sql);
   if (r.error) { feedback("bad", r.error, r.tip); $("#resSlot").innerHTML = ""; return; }
   showRows(r.rows, "Your result");
-  const sol = makeDb().exec(c.l.s);
+  const sol = makeDb().exec(prepSql(c.l.s));
   const verdict = sameResult(r.rows, sol, !!c.l.ordered);
   if (verdict.ok) {
     c.status = "ok";
